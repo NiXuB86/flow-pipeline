@@ -1,0 +1,6 @@
+#!/bin/sh
+
+while true
+    do
+    /wait-for goflow:8080 -- 'conntrack -D -p udp'
+done 

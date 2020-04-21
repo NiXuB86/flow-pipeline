@@ -2,7 +2,6 @@
   "annotations": {
     "list": [
       {
-        "$$hashKey": "object:631",
         "builtIn": 1,
         "datasource": "-- Grafana --",
         "enable": true,
@@ -16,6 +15,8 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
+  "id": 2,
+  "iteration": 1586839407341,
   "links": [],
   "panels": [
     {
@@ -27,7 +28,7 @@
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
-        "h": 9,
+        "h": 6,
         "w": 24,
         "x": 0,
         "y": 0
@@ -37,9 +38,10 @@
       "legend": {
         "avg": false,
         "current": false,
+        "hideEmpty": false,
         "max": false,
         "min": false,
-        "show": true,
+        "show": false,
         "total": false,
         "values": false
       },
@@ -63,7 +65,7 @@
           "database": "default",
           "dateColDataType": "Date",
           "dateLoading": false,
-          "dateTimeColDataType": "TimeFlowStart",
+          "dateTimeColDataType": "TimeReceived",
           "dateTimeType": "DATETIME",
           "datetimeLoading": false,
           "format": "time_series",
@@ -71,9 +73,9 @@
           "group": [],
           "intervalFactor": 1,
           "metricColumn": "none",
-          "query": "SELECT\n    toUInt64(toStartOfMinute($dateTimeCol))*1000 as t,\n    sum(Bytes*SamplingRate) as sumbytes\nFROM $table\nWHERE $timeFilter\nGROUP BY t\nORDER BY t",
-          "rawQuery": "SELECT     toUInt64(toStartOfMinute(TimeFlowStart))*1000 as t,     sum(Bytes*SamplingRate) as sumbytes FROM default.flows_raw WHERE Date >= toDate(1585445405) AND TimeFlowStart >= toDateTime(1585445405) GROUP BY t ORDER BY t",
-          "rawSql": "SELECT\n  (cast(extract(epoch from time_flow) as integer)/30)*30 AS \"time\",\n  sum(bytes*sampling_rate*8)/30\nFROM flows\nWHERE\n  $__timeFilter(date_inserted)\nGROUP BY \"time\"\nORDER BY \"time\"",
+          "query": "SELECT\n    toUInt64(toStartOfMinute($dateTimeCol))*1000 as t,\n    sum(Bytes) as sumbytes\nFROM $table\nWHERE $timeFilter\nGROUP BY t\nORDER BY t",
+          "rawQuery": "SELECT     toUInt64(toStartOfMinute(TimeReceived))*1000 as t,     sum(Bytes) as sumbytes FROM default.flows_raw WHERE Date BETWEEN toDate(1586833267) AND toDate(1586833467) AND TimeReceived BETWEEN toDateTime(1586833267) AND toDateTime(1586833467) GROUP BY t ORDER BY t",
+          "rawSql": "SELECT\n  (cast(extract(epoch from time_flow) as integer)/30)*30 AS \"time\",\n  sum(bytes*8)/30\nFROM flows\nWHERE\n  $__timeFilter(date_inserted)\nGROUP BY \"time\"\nORDER BY \"time\"",
           "refId": "A",
           "round": "0s",
           "select": [
@@ -103,12 +105,13 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Instant traffic",
+      "title": "Поток трафика",
       "tooltip": {
         "shared": true,
         "sort": 0,
         "value_type": "individual"
       },
+      "transparent": true,
       "type": "graph",
       "xaxis": {
         "buckets": null,
@@ -145,10 +148,10 @@
       "datasource": "ClickHouse",
       "fontSize": "100%",
       "gridPos": {
-        "h": 9,
-        "w": 12,
+        "h": 8,
+        "w": 7,
         "x": 0,
-        "y": 9
+        "y": 6
       },
       "id": 7,
       "links": [],
@@ -156,8 +159,8 @@
       "scroll": true,
       "showHeader": true,
       "sort": {
-        "col": 1,
-        "desc": true
+        "col": null,
+        "desc": false
       },
       "styles": [
         {
@@ -185,7 +188,25 @@
           "unit": "none"
         },
         {
-          "alias": "",
+          "alias": "Объём трафика",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "link": false,
+          "mappingType": 1,
+          "pattern": "sumbytes",
+          "thresholds": [],
+          "type": "number",
+          "unit": "decbytes"
+        },
+        {
+          "alias": "IP",
           "align": "auto",
           "colorMode": null,
           "colors": [
@@ -196,10 +217,10 @@
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
           "decimals": 2,
           "mappingType": 1,
-          "pattern": "sumbytes",
+          "pattern": "srcip",
           "thresholds": [],
           "type": "number",
-          "unit": "decbytes"
+          "unit": "short"
         },
         {
           "alias": "",
@@ -222,7 +243,7 @@
           "database": "default",
           "dateColDataType": "",
           "dateLoading": false,
-          "dateTimeColDataType": "TimeFlowStart",
+          "dateTimeColDataType": "TimeReceived",
           "dateTimeType": "DATETIME",
           "datetimeLoading": false,
           "format": "table",
@@ -230,8 +251,8 @@
           "group": [],
           "intervalFactor": 1,
           "metricColumn": "none",
-          "query": "SELECT\n    if(EType = 0x800, IPv4NumToString(reinterpretAsUInt32(SrcAddr)), IPv6NumToString(SrcAddr)) as srcip,\n    sum(Bytes*SamplingRate) AS sumbytes\nFROM $table\nWHERE $timeFilter\nGROUP BY srcip\nORDER BY sumbytes DESC",
-          "rawQuery": "SELECT     if(EType = 0x800, IPv4NumToString(reinterpretAsUInt32(SrcAddr)), IPv6NumToString(SrcAddr)) as srcip,     sum(Bytes*SamplingRate) AS sumbytes FROM default.flows_raw WHERE TimeFlowStart >= toDateTime(1585445393) GROUP BY srcip ORDER BY sumbytes DESC",
+          "query": "SELECT\n    if(EType = 0x800, IPv4NumToString(reinterpretAsUInt32(substring(reverse(SrcAddr), 13, 4))), IPv6NumToString(SrcAddr)) as srcip,\n    sum(Bytes) AS sumbytes\nFROM $table\nWHERE $timeFilter\nGROUP BY srcip\nORDER BY sumbytes DESC",
+          "rawQuery": "SELECT     if(EType = 0x800, IPv4NumToString(reinterpretAsUInt32(substring(reverse(SrcAddr), 13, 4))), IPv6NumToString(SrcAddr)) as srcip,     sum(Bytes) AS sumbytes FROM default.flows_raw WHERE TimeReceived >= toDateTime(1585445393) GROUP BY srcip ORDER BY sumbytes DESC",
           "rawSql": "SELECT src_ip, count(*), sum(bytes) AS sumBytes FROM flows GROUP BY src_ip",
           "refId": "A",
           "round": "0s",
@@ -257,8 +278,9 @@
           ]
         }
       ],
-      "title": "Top source IPs",
+      "title": "IP адреса источника трафика",
       "transform": "table",
+      "transparent": true,
       "type": "table"
     },
     {
@@ -266,10 +288,149 @@
       "datasource": "ClickHouse",
       "fontSize": "100%",
       "gridPos": {
-        "h": 9,
-        "w": 12,
-        "x": 12,
-        "y": 9
+        "h": 8,
+        "w": 7,
+        "x": 7,
+        "y": 6
+      },
+      "id": 10,
+      "links": [],
+      "pageSize": null,
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": null,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "Time",
+          "align": "auto",
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "pattern": "Time",
+          "type": "date"
+        },
+        {
+          "alias": "",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 0,
+          "mappingType": 1,
+          "pattern": ".*_port",
+          "thresholds": [],
+          "type": "number",
+          "unit": "none"
+        },
+        {
+          "alias": "Объём трафика",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "sumbytes",
+          "thresholds": [],
+          "type": "number",
+          "unit": "decbytes"
+        },
+        {
+          "alias": "IP",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "dstip",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        },
+        {
+          "alias": "",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "decimals": 0,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "database": "default",
+          "dateColDataType": "",
+          "dateLoading": false,
+          "dateTimeColDataType": "TimeReceived",
+          "dateTimeType": "DATETIME",
+          "datetimeLoading": false,
+          "format": "table",
+          "formattedQuery": "SELECT $timeSeries as t, count() FROM $table WHERE $timeFilter GROUP BY t ORDER BY t",
+          "group": [],
+          "intervalFactor": 1,
+          "metricColumn": "none",
+          "query": "SELECT\n    if(EType = 0x800, IPv4NumToString(reinterpretAsUInt32(substring(reverse(DstAddr), 13, 4))), IPv6NumToString(DstAddr)) as dstip,\n    sum(Bytes) AS sumbytes\nFROM $table\nWHERE $timeFilter\nGROUP BY dstip\nORDER BY sumbytes DESC",
+          "rawQuery": "SELECT     if(EType = 0x800, IPv4NumToString(reinterpretAsUInt32(substring(reverse(DstAddr), 13, 4))), IPv6NumToString(DstAddr)) as dstip,     sum(Bytes) AS sumbytes FROM default.flows_raw WHERE TimeReceived >= toDateTime(1585445388) GROUP BY dstip ORDER BY sumbytes DESC",
+          "rawSql": "SELECT src_ip, count(*), sum(bytes) AS sumBytes FROM flows GROUP BY src_ip",
+          "refId": "A",
+          "round": "0s",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "flows_raw",
+          "tableLoading": false,
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "IP адреса назначения трафика",
+      "transform": "table",
+      "transparent": true,
+      "type": "table"
+    },
+    {
+      "columns": [],
+      "datasource": "ClickHouse",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 8,
+        "w": 5,
+        "x": 14,
+        "y": 6
       },
       "id": 9,
       "links": [],
@@ -282,7 +443,6 @@
       },
       "styles": [
         {
-          "$$hashKey": "object:1506",
           "alias": "Time",
           "align": "auto",
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
@@ -290,8 +450,7 @@
           "type": "date"
         },
         {
-          "$$hashKey": "object:1507",
-          "alias": "",
+          "alias": "Номер порта",
           "align": "auto",
           "colorMode": null,
           "colors": [
@@ -308,130 +467,7 @@
           "unit": "none"
         },
         {
-          "$$hashKey": "object:1508",
-          "alias": "",
-          "align": "auto",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "mappingType": 1,
-          "pattern": "sumbytes",
-          "thresholds": [],
-          "type": "number",
-          "unit": "decbytes"
-        },
-        {
-          "$$hashKey": "object:1509",
-          "alias": "",
-          "align": "auto",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "decimals": 0,
-          "pattern": "/.*/",
-          "thresholds": [],
-          "type": "number",
-          "unit": "short"
-        }
-      ],
-      "targets": [
-        {
-          "database": "default",
-          "dateColDataType": "",
-          "dateLoading": false,
-          "dateTimeColDataType": "TimeFlowStart",
-          "dateTimeType": "DATETIME",
-          "datetimeLoading": false,
-          "format": "table",
-          "formattedQuery": "SELECT $timeSeries as t, count() FROM $table WHERE $timeFilter GROUP BY t ORDER BY t",
-          "group": [],
-          "intervalFactor": 1,
-          "metricColumn": "none",
-          "query": "SELECT\n    SrcPort as port,\n    sum(Bytes*SamplingRate) AS sumbytes\nFROM $table\nWHERE $timeFilter\nGROUP BY port\nORDER BY sumbytes DESC",
-          "rawQuery": "SELECT     toUInt64(toStartOfMinute(TimeFlowStart))*1000 as t,     sum(Bytes*SamplingRate) as sumbytes FROM default.flows_raw WHERE Date >= toDate(1585442922) AND TimeFlowStart >= toDateTime(1585442922) GROUP BY t ORDER BY t",
-          "rawSql": "SELECT src_ip, count(*), sum(bytes) AS sumBytes FROM flows GROUP BY src_ip",
-          "refId": "A",
-          "round": "0s",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "column"
-              }
-            ]
-          ],
-          "table": "flows_raw",
-          "tableLoading": false,
-          "timeColumn": "time",
-          "where": [
-            {
-              "name": "$__timeFilter",
-              "params": [],
-              "type": "macro"
-            }
-          ]
-        }
-      ],
-      "title": "Top source ports",
-      "transform": "table",
-      "type": "table"
-    },
-    {
-      "columns": [],
-      "datasource": "ClickHouse",
-      "fontSize": "100%",
-      "gridPos": {
-        "h": 9,
-        "w": 12,
-        "x": 0,
-        "y": 18
-      },
-      "id": 10,
-      "links": [],
-      "pageSize": null,
-      "scroll": true,
-      "showHeader": true,
-      "sort": {
-        "col": 1,
-        "desc": true
-      },
-      "styles": [
-        {
-          "alias": "Time",
-          "align": "auto",
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "pattern": "Time",
-          "type": "date"
-        },
-        {
-          "alias": "",
-          "align": "auto",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 0,
-          "mappingType": 1,
-          "pattern": ".*_port",
-          "thresholds": [],
-          "type": "number",
-          "unit": "none"
-        },
-        {
-          "alias": "",
+          "alias": "Объём трафика",
           "align": "auto",
           "colorMode": null,
           "colors": [
@@ -468,7 +504,7 @@
           "database": "default",
           "dateColDataType": "",
           "dateLoading": false,
-          "dateTimeColDataType": "TimeFlowStart",
+          "dateTimeColDataType": "TimeReceived",
           "dateTimeType": "DATETIME",
           "datetimeLoading": false,
           "format": "table",
@@ -476,8 +512,8 @@
           "group": [],
           "intervalFactor": 1,
           "metricColumn": "none",
-          "query": "SELECT\n    if(EType = 0x800, IPv4NumToString(reinterpretAsUInt32(DstAddr)), IPv6NumToString(DstAddr)) as dstip,\n    sum(Bytes*SamplingRate) AS sumbytes\nFROM $table\nWHERE $timeFilter\nGROUP BY dstip\nORDER BY sumbytes DESC",
-          "rawQuery": "SELECT     if(EType = 0x800, IPv4NumToString(reinterpretAsUInt32(DstAddr)), IPv6NumToString(DstAddr)) as dstip,     sum(Bytes*SamplingRate) AS sumbytes FROM default.flows_raw WHERE TimeFlowStart >= toDateTime(1585445388) GROUP BY dstip ORDER BY sumbytes DESC",
+          "query": "SELECT\n    SrcPort as port,\n    sum(Bytes) AS sumbytes\nFROM $table\nWHERE $timeFilter\nGROUP BY port\nORDER BY sumbytes DESC",
+          "rawQuery": "SELECT     toUInt64(toStartOfMinute(TimeReceived))*1000 as t,     sum(Bytes) as sumbytes FROM default.flows_raw WHERE Date BETWEEN toDate(1586833267) AND toDate(1586833467) AND TimeReceived BETWEEN toDateTime(1586833267) AND toDateTime(1586833467) GROUP BY t ORDER BY t",
           "rawSql": "SELECT src_ip, count(*), sum(bytes) AS sumBytes FROM flows GROUP BY src_ip",
           "refId": "A",
           "round": "0s",
@@ -503,8 +539,9 @@
           ]
         }
       ],
-      "title": "Top destination IPs",
+      "title": "Порты отправки трафика",
       "transform": "table",
+      "transparent": true,
       "type": "table"
     },
     {
@@ -512,10 +549,10 @@
       "datasource": "ClickHouse",
       "fontSize": "100%",
       "gridPos": {
-        "h": 9,
-        "w": 12,
-        "x": 12,
-        "y": 18
+        "h": 8,
+        "w": 5,
+        "x": 19,
+        "y": 6
       },
       "id": 11,
       "links": [],
@@ -528,7 +565,6 @@
       },
       "styles": [
         {
-          "$$hashKey": "object:1428",
           "alias": "Time",
           "align": "auto",
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
@@ -536,8 +572,7 @@
           "type": "date"
         },
         {
-          "$$hashKey": "object:1429",
-          "alias": "",
+          "alias": "Номер порта",
           "align": "auto",
           "colorMode": null,
           "colors": [
@@ -554,8 +589,7 @@
           "unit": "none"
         },
         {
-          "$$hashKey": "object:1430",
-          "alias": "",
+          "alias": "Объём трафика",
           "align": "auto",
           "colorMode": null,
           "colors": [
@@ -572,7 +606,6 @@
           "unit": "decbytes"
         },
         {
-          "$$hashKey": "object:1431",
           "alias": "",
           "align": "auto",
           "colorMode": null,
@@ -593,7 +626,7 @@
           "database": "default",
           "dateColDataType": "",
           "dateLoading": false,
-          "dateTimeColDataType": "TimeFlowStart",
+          "dateTimeColDataType": "TimeReceived",
           "dateTimeType": "DATETIME",
           "datetimeLoading": false,
           "format": "table",
@@ -601,8 +634,8 @@
           "group": [],
           "intervalFactor": 1,
           "metricColumn": "none",
-          "query": "SELECT\n    DstPort as port,\n    sum(Bytes*SamplingRate) AS sumbytes\nFROM $table\nWHERE $timeFilter\nGROUP BY port\nORDER BY sumbytes DESC",
-          "rawQuery": "SELECT     toUInt64(toStartOfMinute(TimeFlowStart))*1000 as t,     sum(Bytes*SamplingRate) as sumbytes FROM default.flows_raw WHERE Date >= toDate(1585442721) AND TimeFlowStart >= toDateTime(1585442721) GROUP BY t ORDER BY t",
+          "query": "SELECT\n    DstPort as port,\n    sum(Bytes) AS sumbytes\nFROM $table\nWHERE $timeFilter\nGROUP BY port\nORDER BY sumbytes DESC",
+          "rawQuery": "SELECT     toUInt64(toStartOfMinute(TimeReceived))*1000 as t,     sum(Bytes) as sumbytes FROM default.flows_raw WHERE Date >= toDate(1585442721) AND TimeReceived >= toDateTime(1585442721) GROUP BY t ORDER BY t",
           "rawSql": "SELECT src_ip, count(*), sum(bytes) AS sumBytes FROM flows GROUP BY src_ip",
           "refId": "A",
           "round": "0s",
@@ -628,8 +661,514 @@
           ]
         }
       ],
-      "title": "Top destination ports",
+      "title": "Порты назначения трафика",
       "transform": "table",
+      "transparent": true,
+      "type": "table"
+    },
+    {
+      "columns": [],
+      "datasource": "Prometheus",
+      "fontSize": "80%",
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 14
+      },
+      "id": 39,
+      "links": [],
+      "maxPerRow": 2,
+      "pageSize": 6,
+      "repeat": null,
+      "repeatDirection": "h",
+      "showHeader": true,
+      "sort": {
+        "col": 1,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "Time",
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "pattern": "Time",
+          "type": "hidden"
+        },
+        {
+          "alias": "Интерфейс",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "ifDescr",
+          "preserveFormat": false,
+          "sanitize": false,
+          "thresholds": [],
+          "type": "string",
+          "unit": "short"
+        },
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "ifIndex",
+          "thresholds": [],
+          "type": "hidden",
+          "unit": "short"
+        },
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "__name__",
+          "thresholds": [],
+          "type": "hidden",
+          "unit": "short"
+        },
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "instance",
+          "thresholds": [],
+          "type": "hidden",
+          "unit": "short"
+        },
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "job",
+          "thresholds": [],
+          "type": "hidden",
+          "unit": "short"
+        },
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "ifName",
+          "thresholds": [],
+          "type": "hidden",
+          "unit": "short"
+        },
+        {
+          "alias": "MTU",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 0,
+          "mappingType": 1,
+          "pattern": "Value #A",
+          "thresholds": [],
+          "type": "string",
+          "unit": "decbytes"
+        },
+        {
+          "alias": "Байт принято",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Value #B",
+          "thresholds": [],
+          "type": "number",
+          "unit": "decbytes"
+        },
+        {
+          "alias": "Байт отправленно",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Value #C",
+          "thresholds": [],
+          "type": "number",
+          "unit": "decbytes"
+        },
+        {
+          "alias": "Количество принятых пакетов",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Value #D",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        },
+        {
+          "alias": "Количество отправленных пакетов",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Value #E",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        },
+        {
+          "alias": "Подключение коннектора",
+          "colorMode": "cell",
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(50, 172, 45, 0.97)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Value #F",
+          "thresholds": [
+            "1"
+          ],
+          "type": "string",
+          "unit": "short"
+        },
+        {
+          "alias": "Состояние интерфейса",
+          "colorMode": "cell",
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(50, 172, 45, 0.97)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Value #H",
+          "thresholds": [
+            "1"
+          ],
+          "type": "string",
+          "unit": "short"
+        },
+        {
+          "alias": "Административное состояние",
+          "colorMode": "cell",
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(50, 172, 45, 0.97)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Value #G",
+          "thresholds": [
+            "1"
+          ],
+          "type": "string",
+          "unit": "short"
+        },
+        {
+          "alias": "Ошибок входящих пакетов",
+          "colorMode": "cell",
+          "colors": [
+            "rgba(50, 172, 45, 0.97)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(245, 54, 54, 0.9)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Value #I",
+          "thresholds": [
+            "1",
+            "100"
+          ],
+          "type": "number",
+          "unit": "short"
+        },
+        {
+          "alias": "Ошибок исходящих пакетов",
+          "colorMode": "cell",
+          "colors": [
+            "rgba(50, 172, 45, 0.97)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(245, 54, 54, 0.9)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Value #J",
+          "thresholds": [
+            "1",
+            "100"
+          ],
+          "type": "number",
+          "unit": "short"
+        },
+        {
+          "alias": "MAC",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "ifPhysAddress",
+          "thresholds": [],
+          "type": "string",
+          "unit": "short"
+        },
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Value #K",
+          "thresholds": [],
+          "type": "hidden",
+          "unit": "short"
+        },
+        {
+          "alias": "Скорость интерфейса",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Value #L",
+          "thresholds": [],
+          "type": "number",
+          "unit": "bps"
+        },
+        {
+          "alias": "Тип интерфейса",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "ifType",
+          "thresholds": [],
+          "type": "string",
+          "unit": "short"
+        },
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Value #M",
+          "thresholds": [],
+          "type": "hidden",
+          "unit": "short"
+        },
+        {
+          "alias": "",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "ifAlias",
+          "thresholds": [],
+          "type": "hidden",
+          "unit": "short"
+        },
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "decimals": 2,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "expr": "sum(ifPhysAddress{instance=~\"$node\",job=\"snmp\"})by(instance,job,ifDescr,ifPhysAddress)",
+          "format": "table",
+          "hide": false,
+          "instant": true,
+          "refId": "K"
+        },
+        {
+          "expr": "sum(ifSpeed{instance=~\"$node\",job=\"snmp\"})by(instance,job,ifDescr,ifSpeed)",
+          "format": "table",
+          "instant": true,
+          "refId": "L"
+        },
+        {
+          "expr": "sum(ifType_info{instance=~\"$node\",job=\"snmp\"})by(instance,job,ifDescr,ifType_info)",
+          "format": "table",
+          "instant": true,
+          "refId": "M"
+        },
+        {
+          "expr": "ifMtu{instance=~\"$node\",job=\"snmp\"}",
+          "format": "table",
+          "instant": true,
+          "intervalFactor": 1,
+          "refId": "A"
+        },
+        {
+          "expr": "sum(ifHCInOctets{instance=~\"$node\",job=\"snmp\"})by(instance,job,ifDescr,ifHCInOctets)",
+          "format": "table",
+          "instant": true,
+          "intervalFactor": 1,
+          "refId": "B"
+        },
+        {
+          "expr": "sum(ifHCInMulticastPkts{instance=~\"$node\",job=\"snmp\"} + ifInBroadcastPkts{instance=~\"$node\",job=\"snmp\"} + ifInUcastPkts{instance=~\"$node\",job=\"snmp\"})by(instance,job,ifDescr)",
+          "format": "table",
+          "instant": true,
+          "refId": "D"
+        },
+        {
+          "expr": "sum(ifInErrors{instance=~\"$node\",job=\"snmp\"})by(instance,job,ifDescr,ifInErrors)",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "",
+          "refId": "I"
+        },
+        {
+          "expr": "sum(ifHCOutOctets{instance=~\"$node\",job=\"snmp\"})by(instance,job,ifDescr,ifHCOutOctets)",
+          "format": "table",
+          "instant": true,
+          "refId": "C"
+        },
+        {
+          "expr": "sum(ifHCOutMulticastPkts{instance=~\"$node\",job=\"snmp\"} + ifOutBroadcastPkts{instance=~\"$node\",job=\"snmp\"} + ifOutUcastPkts{instance=~\"$node\",job=\"snmp\"})by(instance,job,ifDescr)",
+          "format": "table",
+          "instant": true,
+          "refId": "E"
+        },
+        {
+          "expr": "sum(ifOutErrors{instance=~\"$node\",job=\"snmp\"})by(instance,job,ifDescr,ifOutErrors)",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "",
+          "refId": "J"
+        },
+        {
+          "expr": "sum(ifOperStatus{instance=~\"$node\",job=\"snmp\"})by(instance,job,ifDescr,ifOperStatus) == bool 1",
+          "format": "table",
+          "instant": true,
+          "refId": "H"
+        },
+        {
+          "expr": "sum(ifConnectorPresent{instance=~\"$node\",job=\"snmp\"})by(instance,job,ifDescr,ifConnectorPresent) > bool 0",
+          "format": "table",
+          "hide": true,
+          "instant": true,
+          "refId": "F"
+        },
+        {
+          "expr": "sum(ifAdminStatus{instance=~\"$node\",job=\"snmp\"})by(instance,job,ifDescr,ifAdminStatus) == bool 1",
+          "format": "table",
+          "hide": true,
+          "instant": true,
+          "legendFormat": "",
+          "refId": "G"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Информация об интерфейсах оборудования $node",
+      "transform": "table",
+      "transparent": true,
       "type": "table"
     }
   ],
@@ -638,10 +1177,34 @@
   "style": "dark",
   "tags": [],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "allValue": null,
+        "current": {
+          "selected": false,
+          "text": "192.168.25.1",
+          "value": "192.168.25.1"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "IP адрес роутера",
+        "multi": false,
+        "name": "node",
+        "options": [
+          {
+            "selected": true,
+            "text": "192.168.25.1",
+            "value": "192.168.25.1"
+          }
+        ],
+        "query": "192.168.25.1",
+        "skipUrlSync": false,
+        "type": "custom"
+      }
+    ]
   },
   "time": {
-    "from": "now-1h",
+    "from": "now-12h",
     "to": "now"
   },
   "timepicker": {
@@ -675,5 +1238,5 @@
   "variables": {
     "list": []
   },
-  "version": 1
+  "version": 9
 }

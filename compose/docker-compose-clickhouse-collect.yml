@@ -1,7 +1,9 @@
-version: "3"
+version: "3.4"
 services:
   zookeeper:
     image: 'bitnami/zookeeper:latest'
+    networks: 
+      - internal
     ports:
       - '2181:2181'
     environment:
@@ -9,6 +11,8 @@ services:
     restart: always
   kafka:
     image: 'bitnami/kafka:latest'
+    networks: 
+      - internal
     ports:
       - '9092:9092'
     environment:
@@ -20,6 +24,8 @@ services:
       - 'zookeeper'
   initializer:
     image: 'bitnami/kafka:latest'
+    networks: 
+      - internal
     depends_on:
       - 'kafka'
     entrypoint: '/bin/bash'
@@ -28,8 +34,12 @@ services:
       kafka-topics.sh --create --zookeeper zookeeper:2181 --replication-factor 1 --partitions 2 --topic flows ;"
   grafana:
     build: ../grafana
+    networks: 
+      - internal
     ports:
       - '3000:3000'
+    environment:
+      plugins: "grafana-clock-panel,grafana-simple-json-datasource,grafana-piechart-panel,grafana-worldmap-panel"
     restart: always
     volumes:
       - ./grafana/datasources-ch.yml:/etc/grafana/provisioning/datasources/datasources-ch.yml
@@ -37,6 +47,8 @@ services:
       - ./grafana/dashboards:/var/lib/grafana/dashboards
   prometheus:
     image: 'prom/prometheus'
+    networks: 
+      - internal
     ports:
       - '9090:9090'
     restart: always
@@ -46,6 +58,10 @@ services:
     image: 'cloudflare/goflow:latest'
     depends_on:
       - 'initializer'
+    networks:
+      - internal
+    cap_add:
+      - NET_ADMIN
     ports:
       - '8080:8080'
       - '6343:6343/udp'
@@ -58,12 +74,73 @@ services:
       -kafka.topic flows
       -proto.fixedlen=true
       "
+  conntrack:
+    build: ./conntrack
+    image: nixub/conntrack
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+    privileged: true
+    depends_on:
+      - 'goflow'
+    entrypoint: '/bin/sh'
+    command: >
+      -c "sleep 15 ;
+      conntrack -D -p udp
+      "
   db:
     image: yandex/clickhouse-server
+    networks: 
+      - internal
     ports:
-      - 8123:8123
+      - '8123:8123'
     volumes:
       - ./clickhouse:/docker-entrypoint-initdb.d/
       - ../pb-ext/flow.proto:/var/lib/clickhouse/format_schemas/flow.proto
     depends_on:
       - 'kafka'
+    restart: always
+  snmp_prometheus:
+    container_name: snmp_prometheus
+    image: prom/snmp-exporter
+    networks: 
+      - internal
+    ports:
+      - '9116:9116'
+    volumes:
+      - ./snmp.yml:/etc/snmp_exporter/snmp.yml
+    restart: always
+  loki:
+    image: grafana/loki:master
+    networks: 
+      - internal
+    ports:
+      - '3100:3100'
+    volumes:
+      - ./loki/loki.yaml:/etc/loki/loki.yaml
+    command: -config.file=/etc/loki/loki.yaml
+  promtail:
+    image: grafana/promtail:master
+    volumes:
+      - /var/log:/var/log
+      - ./loki/promtail/promtail.yaml:/etc/promtail/promtail.yaml
+    networks: 
+      - internal
+    ports:
+      - '1514:1514'
+    command: -config.file=/etc/promtail/promtail.yaml
+  syslog:
+    image: balabit/syslog-ng
+    volumes: 
+      - ./loki/syslog-ng/syslog-ng.conf:/etc/syslog-ng/syslog-ng.conf
+    ports: 
+      - '514:514/udp'
+      - '601:601'
+    networks: 
+      - internal
+
+networks:
+  internal:
+
+
+    
