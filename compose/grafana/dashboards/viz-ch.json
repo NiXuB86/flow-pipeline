@@ -15,35 +15,189 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 2,
-  "iteration": 1586839407341,
+  "id": 6,
+  "iteration": 1590438371820,
   "links": [],
   "panels": [
+    {
+      "cacheTimeout": null,
+      "datasource": "ClickHouse",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "left"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "decbytes"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName"
+            },
+            "properties": []
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "id": 18,
+      "interval": null,
+      "links": [],
+      "maxDataPoints": 1,
+      "options": {
+        "showHeader": true
+      },
+      "pluginVersion": "7.0.0",
+      "targets": [
+        {
+          "database": "default",
+          "dateColDataType": "",
+          "dateLoading": false,
+          "dateTimeColDataType": "TimeReceived",
+          "dateTimeType": "DATETIME",
+          "datetimeLoading": false,
+          "format": "table",
+          "formattedQuery": "SELECT $timeSeries as t, count() FROM $table WHERE $timeFilter GROUP BY t ORDER BY t",
+          "intervalFactor": 1,
+          "query": "WITH\n    if(EType = 0x800, IPv4NumToString(reinterpretAsUInt32(substring(reverse(SrcAddr), 13, 4))), IPv6NumToString(SrcAddr)) as srcip,\n    IPv4CIDRToRange(IPv4StringToNum(splitByChar('/', $lanips)[1]), toUInt8(splitByChar('/', $lanips)[2])) as iprange\nSELECT\n    multiIf(Proto = 6, 'TCP', Proto = 1, 'ICMP', Proto = 2, 'IGMP', Proto = 17, 'UDP', Proto = 58, 'IPv6-ICMP', 'Proto') AS IPproto,\n    sum(Bytes) AS BytesSum\nFROM $table\nWHERE $timeFilter AND IPv4NumToString(reinterpretAsUInt32(substring(reverse(SamplerAddress), 13, 4))) = '$node' AND\n    ((IPv4StringToNum(srcip) >= (iprange.1)) AND (IPv4StringToNum(srcip) <= (iprange.2)))\nGROUP BY IPproto\nORDER BY BytesSum DESC",
+          "rawQuery": "WITH     if(EType = 0x800, IPv4NumToString(reinterpretAsUInt32(substring(reverse(SrcAddr), 13, 4))), IPv6NumToString(SrcAddr)) as srcip,     IPv4CIDRToRange(IPv4StringToNum(splitByChar('/', '192.168.25.0/24')[1]), toUInt8(splitByChar('/', '192.168.25.0/24')[2])) as iprange SELECT     multiIf(Proto = 6, 'TCP', Proto = 1, 'ICMP', Proto = 2, 'IGMP', Proto = 17, 'UDP', Proto = 58, 'IPv6-ICMP', 'Proto') AS IPproto,     sum(Bytes) AS BytesSum FROM default.flows_raw WHERE TimeReceived >= toDateTime(1590399565) AND IPv4NumToString(reinterpretAsUInt32(substring(reverse(SamplerAddress), 13, 4))) = '192.168.25.1' AND     ((IPv4StringToNum(srcip) >= (iprange.1)) AND (IPv4StringToNum(srcip) <= (iprange.2))) GROUP BY IPproto ORDER BY BytesSum DESC",
+          "refId": "A",
+          "round": "0s",
+          "table": "flows_raw",
+          "tableLoading": false
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Распределение протоколов транспортного уровня",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "BytesSum": "Объём трафика",
+              "IPproto": "Транспортный протокол"
+            }
+          }
+        }
+      ],
+      "transparent": true,
+      "type": "table"
+    },
+    {
+      "datasource": "ClickHouse",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "decbytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 6,
+        "y": 0
+      },
+      "id": 13,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "values": false
+        }
+      },
+      "pluginVersion": "7.0.0",
+      "targets": [
+        {
+          "database": "default",
+          "dateColDataType": "Date",
+          "dateLoading": false,
+          "dateTimeColDataType": "TimeReceived",
+          "dateTimeType": "DATETIME",
+          "datetimeLoading": false,
+          "format": "time_series",
+          "formattedQuery": "SELECT $timeSeries as t, count() FROM $table WHERE $timeFilter GROUP BY t ORDER BY t",
+          "intervalFactor": 1,
+          "query": "WITH\n    if(EType = 0x800, IPv4NumToString(reinterpretAsUInt32(substring(reverse(SrcAddr), 13, 4))), IPv6NumToString(SrcAddr)) as srcip,\n    IPv4CIDRToRange(IPv4StringToNum(splitByChar('/', $lanips)[1]), toUInt8(splitByChar('/', $lanips)[2])) as iprange\nSELECT\n    sum(Bytes)\nFROM $table\nWHERE $timeFilter AND IPv4NumToString(reinterpretAsUInt32(substring(reverse(SamplerAddress), 13, 4))) = '$node' AND EType = 0x800 AND\n        ((IPv4StringToNum(srcip) >= (iprange.1)) AND (IPv4StringToNum(srcip) <= (iprange.2)))\nGROUP BY EType",
+          "rawQuery": "WITH     if(EType = 0x800, IPv4NumToString(reinterpretAsUInt32(substring(reverse(SrcAddr), 13, 4))), IPv6NumToString(SrcAddr)) as srcip,     IPv4CIDRToRange(IPv4StringToNum(splitByChar('/', '192.168.25.0/24')[1]), toUInt8(splitByChar('/', '192.168.25.0/24')[2])) as iprange SELECT     sum(Bytes) FROM default.flows_raw WHERE Date >= toDate(1590399683) AND TimeReceived >= toDateTime(1590399683) AND IPv4NumToString(reinterpretAsUInt32(substring(reverse(SamplerAddress), 13, 4))) = '192.168.25.1' AND EType = 0x800 AND         ((IPv4StringToNum(srcip) >= (iprange.1)) AND (IPv4StringToNum(srcip) <= (iprange.2))) GROUP BY EType",
+          "refId": "A",
+          "round": "0s",
+          "table": "flows_raw",
+          "tableLoading": false
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Объём трафика IPv4",
+      "transparent": true,
+      "type": "stat"
+    },
     {
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
       "dashes": false,
       "datasource": "ClickHouse",
-      "fill": 1,
-      "fillGradient": 0,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 10,
+      "fillGradient": 8,
       "gridPos": {
-        "h": 6,
-        "w": 24,
-        "x": 0,
+        "h": 9,
+        "w": 15,
+        "x": 9,
         "y": 0
       },
       "hiddenSeries": false,
       "id": 2,
       "legend": {
-        "avg": false,
-        "current": false,
+        "alignAsTable": false,
+        "avg": true,
+        "current": true,
         "hideEmpty": false,
-        "max": false,
-        "min": false,
-        "show": false,
+        "hideZero": false,
+        "max": true,
+        "min": true,
+        "rightSide": false,
+        "show": true,
         "total": false,
-        "values": false
+        "values": true
       },
       "lines": true,
       "linewidth": 1,
@@ -71,10 +225,11 @@
           "format": "time_series",
           "formattedQuery": "SELECT $timeSeries as t, count() FROM $table WHERE $timeFilter GROUP BY t ORDER BY t",
           "group": [],
+          "hide": false,
           "intervalFactor": 1,
           "metricColumn": "none",
-          "query": "SELECT\n    toUInt64(toStartOfMinute($dateTimeCol))*1000 as t,\n    sum(Bytes) as sumbytes\nFROM $table\nWHERE $timeFilter\nGROUP BY t\nORDER BY t",
-          "rawQuery": "SELECT     toUInt64(toStartOfMinute(TimeReceived))*1000 as t,     sum(Bytes) as sumbytes FROM default.flows_raw WHERE Date BETWEEN toDate(1586833267) AND toDate(1586833467) AND TimeReceived BETWEEN toDateTime(1586833267) AND toDateTime(1586833467) GROUP BY t ORDER BY t",
+          "query": "SELECT\n    t,\n    sumbytes / 60 AS BitRate\nFROM\n(\n    WITH\n        if(EType = 0x800, IPv4NumToString(reinterpretAsUInt32(substring(reverse(SrcAddr), 13, 4))), IPv6NumToString(SrcAddr)) as srcip,\n        IPv4CIDRToRange(IPv4StringToNum(splitByChar('/', $lanips)[1]), toUInt8(splitByChar('/', $lanips)[2])) as iprange\n    SELECT\n        toUInt64(toStartOfMinute($dateTimeCol)) * 1000 as t,\n        sum(Bytes * 8) as sumbytes\n    FROM $table\n    WHERE\n        $timeFilter\n        AND IPv4NumToString(reinterpretAsUInt32(substring(reverse(SamplerAddress), 13, 4))) = '$node' AND\n        ((IPv4StringToNum(srcip) >= (iprange.1)) AND (IPv4StringToNum(srcip) <= (iprange.2)))\n    GROUP BY t\n    ORDER BY t\n)",
+          "rawQuery": "SELECT     t,     sumbytes / 60 AS BitRate FROM (     WITH         if(EType = 0x800, IPv4NumToString(reinterpretAsUInt32(substring(reverse(SrcAddr), 13, 4))), IPv6NumToString(SrcAddr)) as srcip,         IPv4CIDRToRange(IPv4StringToNum(splitByChar('/', '192.168.25.0/24')[1]), toUInt8(splitByChar('/', '192.168.25.0/24')[2])) as iprange     SELECT         toUInt64(toStartOfMinute(TimeReceived)) * 1000 as t,         sum(Bytes * 8) as sumbytes     FROM default.flows_raw     WHERE         Date >= toDate(1590399639) AND TimeReceived >= toDateTime(1590399639)         AND IPv4NumToString(reinterpretAsUInt32(substring(reverse(SamplerAddress), 13, 4))) = '192.168.25.1' AND         ((IPv4StringToNum(srcip) >= (iprange.1)) AND (IPv4StringToNum(srcip) <= (iprange.2)))     GROUP BY t     ORDER BY t )",
           "rawSql": "SELECT\n  (cast(extract(epoch from time_flow) as integer)/30)*30 AS \"time\",\n  sum(bytes*8)/30\nFROM flows\nWHERE\n  $__timeFilter(date_inserted)\nGROUP BY \"time\"\nORDER BY \"time\"",
           "refId": "A",
           "round": "0s",
@@ -111,6 +266,7 @@
         "sort": 0,
         "value_type": "individual"
       },
+      "transformations": [],
       "transparent": true,
       "type": "graph",
       "xaxis": {
@@ -123,19 +279,19 @@
       "yaxes": [
         {
           "format": "bps",
-          "label": null,
+          "label": "BitRate",
           "logBase": 1,
           "max": null,
           "min": null,
           "show": true
         },
         {
-          "format": "short",
-          "label": null,
+          "format": "pps",
+          "label": "PacketRate",
           "logBase": 1,
           "max": null,
           "min": null,
-          "show": true
+          "show": false
         }
       ],
       "yaxis": {
@@ -144,100 +300,131 @@
       }
     },
     {
-      "columns": [],
       "datasource": "ClickHouse",
-      "fontSize": "100%",
-      "gridPos": {
-        "h": 8,
-        "w": 7,
-        "x": 0,
-        "y": 6
-      },
-      "id": 7,
-      "links": [],
-      "pageSize": null,
-      "scroll": true,
-      "showHeader": true,
-      "sort": {
-        "col": null,
-        "desc": false
-      },
-      "styles": [
-        {
-          "alias": "Time",
-          "align": "auto",
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "pattern": "Time",
-          "type": "date"
-        },
-        {
-          "alias": "",
-          "align": "auto",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 0,
-          "mappingType": 1,
-          "pattern": ".*_port",
-          "thresholds": [],
-          "type": "number",
-          "unit": "none"
-        },
-        {
-          "alias": "Объём трафика",
-          "align": "auto",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "link": false,
-          "mappingType": 1,
-          "pattern": "sumbytes",
-          "thresholds": [],
-          "type": "number",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
           "unit": "decbytes"
         },
-        {
-          "alias": "IP",
-          "align": "auto",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 6,
+        "y": 5
+      },
+      "id": 14,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
           ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "mappingType": 1,
-          "pattern": "srcip",
-          "thresholds": [],
-          "type": "number",
-          "unit": "short"
-        },
+          "values": false
+        }
+      },
+      "pluginVersion": "7.0.0",
+      "targets": [
         {
-          "alias": "",
-          "align": "auto",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "decimals": 0,
-          "pattern": "/.*/",
-          "thresholds": [],
-          "type": "number",
-          "unit": "short"
+          "database": "default",
+          "dateColDataType": "Date",
+          "dateLoading": false,
+          "dateTimeColDataType": "TimeReceived",
+          "dateTimeType": "DATETIME",
+          "datetimeLoading": false,
+          "format": "time_series",
+          "formattedQuery": "SELECT $timeSeries as t, count() FROM $table WHERE $timeFilter GROUP BY t ORDER BY t",
+          "intervalFactor": 1,
+          "query": "WITH\n    IPv4StringToNum(splitByChar('/', $lanips)[1]) as ipnet\nSELECT\n    sum(Bytes)\nFROM $table\nWHERE $timeFilter AND IPv4NumToString(reinterpretAsUInt32(substring(reverse(SamplerAddress), 13, 4))) = '$node' AND EType = 0x86DD AND ipnet = 0\nGROUP BY EType",
+          "rawQuery": "WITH     IPv4StringToNum(splitByChar('/', '0.0.0.0/0')[1]) as ipnet SELECT     sum(Bytes) FROM default.flows_raw WHERE Date >= toDate(1590417672) AND TimeReceived >= toDateTime(1590417672) AND IPv4NumToString(reinterpretAsUInt32(substring(reverse(SamplerAddress), 13, 4))) = '192.168.25.1' AND EType = 0x86DD AND ipnet = 0 GROUP BY EType",
+          "refId": "A",
+          "round": "0s",
+          "table": "flows_raw",
+          "tableLoading": false
         }
       ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Объём трафика IPv6",
+      "transparent": true,
+      "type": "stat"
+    },
+    {
+      "datasource": "ClickHouse",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": null
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "decbytes"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "IP"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 309
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Объём трафика"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "left"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 7,
+        "x": 0,
+        "y": 9
+      },
+      "id": 19,
+      "links": [],
+      "options": {
+        "showHeader": true
+      },
+      "pluginVersion": "7.0.0",
       "targets": [
         {
           "database": "default",
@@ -251,8 +438,8 @@
           "group": [],
           "intervalFactor": 1,
           "metricColumn": "none",
-          "query": "SELECT\n    if(EType = 0x800, IPv4NumToString(reinterpretAsUInt32(substring(reverse(SrcAddr), 13, 4))), IPv6NumToString(SrcAddr)) as srcip,\n    sum(Bytes) AS sumbytes\nFROM $table\nWHERE $timeFilter\nGROUP BY srcip\nORDER BY sumbytes DESC",
-          "rawQuery": "SELECT     if(EType = 0x800, IPv4NumToString(reinterpretAsUInt32(substring(reverse(SrcAddr), 13, 4))), IPv6NumToString(SrcAddr)) as srcip,     sum(Bytes) AS sumbytes FROM default.flows_raw WHERE TimeReceived >= toDateTime(1585445393) GROUP BY srcip ORDER BY sumbytes DESC",
+          "query": "WITH\n    if(EType = 0x800, IPv4NumToString(reinterpretAsUInt32(substring(reverse(SrcAddr), 13, 4))), IPv6NumToString(SrcAddr)) as srcip,\n    IPv4CIDRToRange(IPv4StringToNum(splitByChar('/', $lanips)[1]), toUInt8(splitByChar('/', $lanips)[2])) as iprange\nSELECT\n    srcip,\n    sum(Bytes) AS sumbytes\nFROM $table\nWHERE $timeFilter AND IPv4NumToString(reinterpretAsUInt32(substring(reverse(SamplerAddress), 13, 4))) = '$node' AND\n    ((IPv4StringToNum(srcip) >= (iprange.1)) AND (IPv4StringToNum(srcip) <= (iprange.2)))\nGROUP BY srcip\nORDER BY sumbytes DESC",
+          "rawQuery": "WITH     if(EType = 0x800, IPv4NumToString(reinterpretAsUInt32(substring(reverse(SrcAddr), 13, 4))), IPv6NumToString(SrcAddr)) as srcip,     IPv4CIDRToRange(IPv4StringToNum(splitByChar('/', '0.0.0.0/0')[1]), toUInt8(splitByChar('/', '0.0.0.0/0')[2])) as iprange SELECT     srcip,     sum(Bytes) AS sumbytes FROM default.flows_raw WHERE TimeReceived >= toDateTime(1590421847) AND IPv4NumToString(reinterpretAsUInt32(substring(reverse(SamplerAddress), 13, 4))) = '192.168.25.1' AND     ((IPv4StringToNum(srcip) >= (iprange.1)) AND (IPv4StringToNum(srcip) <= (iprange.2))) GROUP BY srcip ORDER BY sumbytes DESC",
           "rawSql": "SELECT src_ip, count(*), sum(bytes) AS sumBytes FROM flows GROUP BY src_ip",
           "refId": "A",
           "round": "0s",
@@ -279,104 +466,84 @@
         }
       ],
       "title": "IP адреса источника трафика",
-      "transform": "table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "srcip": "IP",
+              "sumbytes": "Объём трафика"
+            }
+          }
+        }
+      ],
       "transparent": true,
       "type": "table"
     },
     {
-      "columns": [],
       "datasource": "ClickHouse",
-      "fontSize": "100%",
-      "gridPos": {
-        "h": 8,
-        "w": 7,
-        "x": 7,
-        "y": 6
-      },
-      "id": 10,
-      "links": [],
-      "pageSize": null,
-      "scroll": true,
-      "showHeader": true,
-      "sort": {
-        "col": null,
-        "desc": false
-      },
-      "styles": [
-        {
-          "alias": "Time",
-          "align": "auto",
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "pattern": "Time",
-          "type": "date"
-        },
-        {
-          "alias": "",
-          "align": "auto",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 0,
-          "mappingType": 1,
-          "pattern": ".*_port",
-          "thresholds": [],
-          "type": "number",
-          "unit": "none"
-        },
-        {
-          "alias": "Объём трафика",
-          "align": "auto",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "mappingType": 1,
-          "pattern": "sumbytes",
-          "thresholds": [],
-          "type": "number",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": null
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
           "unit": "decbytes"
         },
-        {
-          "alias": "IP",
-          "align": "auto",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "mappingType": 1,
-          "pattern": "dstip",
-          "thresholds": [],
-          "type": "number",
-          "unit": "short"
-        },
-        {
-          "alias": "",
-          "align": "auto",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "decimals": 0,
-          "pattern": "/.*/",
-          "thresholds": [],
-          "type": "number",
-          "unit": "short"
-        }
-      ],
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "IP"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 305
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Объём трафика"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "left"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 7,
+        "x": 7,
+        "y": 9
+      },
+      "id": 20,
+      "links": [],
+      "options": {
+        "showHeader": true
+      },
+      "pluginVersion": "7.0.0",
       "targets": [
         {
           "database": "default",
@@ -390,8 +557,8 @@
           "group": [],
           "intervalFactor": 1,
           "metricColumn": "none",
-          "query": "SELECT\n    if(EType = 0x800, IPv4NumToString(reinterpretAsUInt32(substring(reverse(DstAddr), 13, 4))), IPv6NumToString(DstAddr)) as dstip,\n    sum(Bytes) AS sumbytes\nFROM $table\nWHERE $timeFilter\nGROUP BY dstip\nORDER BY sumbytes DESC",
-          "rawQuery": "SELECT     if(EType = 0x800, IPv4NumToString(reinterpretAsUInt32(substring(reverse(DstAddr), 13, 4))), IPv6NumToString(DstAddr)) as dstip,     sum(Bytes) AS sumbytes FROM default.flows_raw WHERE TimeReceived >= toDateTime(1585445388) GROUP BY dstip ORDER BY sumbytes DESC",
+          "query": "WITH\n    if(EType = 0x800, IPv4NumToString(reinterpretAsUInt32(substring(reverse(DstAddr), 13, 4))), IPv6NumToString(DstAddr)) as dstip,\n    IPv4CIDRToRange(IPv4StringToNum(splitByChar('/', $lanips)[1]), toUInt8(splitByChar('/', $lanips)[2])) as iprange\nSELECT\n    dstip,\n    sum(Bytes) AS sumbytes\nFROM $table\nWHERE $timeFilter AND IPv4NumToString(reinterpretAsUInt32(substring(reverse(SamplerAddress), 13, 4))) = '$node' AND\n    ((IPv4StringToNum(dstip) >= (iprange.1)) AND (IPv4StringToNum(dstip) <= (iprange.2)))\nGROUP BY dstip\nORDER BY sumbytes DESC",
+          "rawQuery": "WITH     if(EType = 0x800, IPv4NumToString(reinterpretAsUInt32(substring(reverse(DstAddr), 13, 4))), IPv6NumToString(DstAddr)) as dstip,     IPv4CIDRToRange(IPv4StringToNum(splitByChar('/', '192.168.31.0/24')[1]), toUInt8(splitByChar('/', '192.168.31.0/24')[2])) as iprange SELECT     dstip,     sum(Bytes) AS sumbytes FROM default.flows_raw WHERE TimeReceived >= toDateTime(1590391670) AND IPv4NumToString(reinterpretAsUInt32(substring(reverse(SamplerAddress), 13, 4))) = '192.168.25.1' AND     ((IPv4StringToNum(dstip) >= (iprange.1)) AND (IPv4StringToNum(dstip) <= (iprange.2))) GROUP BY dstip ORDER BY sumbytes DESC",
           "rawSql": "SELECT src_ip, count(*), sum(bytes) AS sumBytes FROM flows GROUP BY src_ip",
           "refId": "A",
           "round": "0s",
@@ -418,87 +585,89 @@
         }
       ],
       "title": "IP адреса назначения трафика",
-      "transform": "table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "dstip": "IP",
+              "srcip": "IP",
+              "sumbytes": "Объём трафика"
+            }
+          }
+        }
+      ],
       "transparent": true,
       "type": "table"
     },
     {
-      "columns": [],
       "datasource": "ClickHouse",
-      "fontSize": "100%",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": null
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Объём трафика"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "decbytes"
+              },
+              {
+                "id": "custom.align",
+                "value": "left"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Порт"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "left"
+              }
+            ]
+          }
+        ]
+      },
       "gridPos": {
-        "h": 8,
+        "h": 12,
         "w": 5,
         "x": 14,
-        "y": 6
+        "y": 9
       },
       "id": 9,
       "links": [],
-      "pageSize": null,
-      "scroll": true,
-      "showHeader": true,
-      "sort": {
-        "col": 2,
-        "desc": true
+      "options": {
+        "showHeader": true
       },
-      "styles": [
-        {
-          "alias": "Time",
-          "align": "auto",
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "pattern": "Time",
-          "type": "date"
-        },
-        {
-          "alias": "Номер порта",
-          "align": "auto",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 0,
-          "mappingType": 1,
-          "pattern": "port",
-          "thresholds": [],
-          "type": "number",
-          "unit": "none"
-        },
-        {
-          "alias": "Объём трафика",
-          "align": "auto",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "mappingType": 1,
-          "pattern": "sumbytes",
-          "thresholds": [],
-          "type": "number",
-          "unit": "decbytes"
-        },
-        {
-          "alias": "",
-          "align": "auto",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "decimals": 0,
-          "pattern": "/.*/",
-          "thresholds": [],
-          "type": "number",
-          "unit": "short"
-        }
-      ],
+      "pluginVersion": "7.0.0",
       "targets": [
         {
           "database": "default",
@@ -512,8 +681,8 @@
           "group": [],
           "intervalFactor": 1,
           "metricColumn": "none",
-          "query": "SELECT\n    SrcPort as port,\n    sum(Bytes) AS sumbytes\nFROM $table\nWHERE $timeFilter\nGROUP BY port\nORDER BY sumbytes DESC",
-          "rawQuery": "SELECT     toUInt64(toStartOfMinute(TimeReceived))*1000 as t,     sum(Bytes) as sumbytes FROM default.flows_raw WHERE Date BETWEEN toDate(1586833267) AND toDate(1586833467) AND TimeReceived BETWEEN toDateTime(1586833267) AND toDateTime(1586833467) GROUP BY t ORDER BY t",
+          "query": "WITH\n    if(EType = 0x800, IPv4NumToString(reinterpretAsUInt32(substring(reverse(SrcAddr), 13, 4))), IPv6NumToString(SrcAddr)) as srcip,\n    IPv4CIDRToRange(IPv4StringToNum(splitByChar('/', $lanips)[1]), toUInt8(splitByChar('/', $lanips)[2])) as iprange\nSELECT\n    SrcPort as port,\n    sum(Bytes) AS sumbytes\nFROM $table\nWHERE $timeFilter AND IPv4NumToString(reinterpretAsUInt32(substring(reverse(SamplerAddress), 13, 4))) = '$node' AND\n    ((IPv4StringToNum(srcip) >= (iprange.1)) AND (IPv4StringToNum(srcip) <= (iprange.2)))\nGROUP BY port\nORDER BY sumbytes DESC",
+          "rawQuery": "WITH     if(EType = 0x800, IPv4NumToString(reinterpretAsUInt32(substring(reverse(SrcAddr), 13, 4))), IPv6NumToString(SrcAddr)) as srcip,     IPv4CIDRToRange(IPv4StringToNum(splitByChar('/', '0.0.0.0/0')[1]), toUInt8(splitByChar('/', '0.0.0.0/0')[2])) as iprange SELECT     SrcPort as port,     sum(Bytes) AS sumbytes FROM default.flows_raw WHERE TimeReceived >= toDateTime(1590337472) AND IPv4NumToString(reinterpretAsUInt32(substring(reverse(SamplerAddress), 13, 4))) = '192.168.25.1' AND     ((IPv4StringToNum(srcip) >= (iprange.1)) AND (IPv4StringToNum(srcip) <= (iprange.2))) GROUP BY port ORDER BY sumbytes DESC",
           "rawSql": "SELECT src_ip, count(*), sum(bytes) AS sumBytes FROM flows GROUP BY src_ip",
           "refId": "A",
           "round": "0s",
@@ -539,88 +708,88 @@
           ]
         }
       ],
-      "title": "Порты отправки трафика",
-      "transform": "table",
+      "title": "Порты источники трафика",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "port": "Порт",
+              "sumbytes": "Объём трафика"
+            }
+          }
+        }
+      ],
       "transparent": true,
       "type": "table"
     },
     {
-      "columns": [],
       "datasource": "ClickHouse",
-      "fontSize": "100%",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": null
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Объём трафика"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "decbytes"
+              },
+              {
+                "id": "custom.align",
+                "value": "left"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Порт"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "left"
+              }
+            ]
+          }
+        ]
+      },
       "gridPos": {
-        "h": 8,
+        "h": 12,
         "w": 5,
         "x": 19,
-        "y": 6
+        "y": 9
       },
       "id": 11,
       "links": [],
-      "pageSize": null,
-      "scroll": true,
-      "showHeader": true,
-      "sort": {
-        "col": 2,
-        "desc": true
+      "options": {
+        "showHeader": true
       },
-      "styles": [
-        {
-          "alias": "Time",
-          "align": "auto",
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "pattern": "Time",
-          "type": "date"
-        },
-        {
-          "alias": "Номер порта",
-          "align": "auto",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 0,
-          "mappingType": 1,
-          "pattern": "port",
-          "thresholds": [],
-          "type": "number",
-          "unit": "none"
-        },
-        {
-          "alias": "Объём трафика",
-          "align": "auto",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "mappingType": 1,
-          "pattern": "sumbytes",
-          "thresholds": [],
-          "type": "number",
-          "unit": "decbytes"
-        },
-        {
-          "alias": "",
-          "align": "auto",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "decimals": 0,
-          "pattern": "/.*/",
-          "thresholds": [],
-          "type": "number",
-          "unit": "short"
-        }
-      ],
+      "pluginVersion": "7.0.0",
       "targets": [
         {
           "database": "default",
@@ -634,8 +803,8 @@
           "group": [],
           "intervalFactor": 1,
           "metricColumn": "none",
-          "query": "SELECT\n    DstPort as port,\n    sum(Bytes) AS sumbytes\nFROM $table\nWHERE $timeFilter\nGROUP BY port\nORDER BY sumbytes DESC",
-          "rawQuery": "SELECT     toUInt64(toStartOfMinute(TimeReceived))*1000 as t,     sum(Bytes) as sumbytes FROM default.flows_raw WHERE Date >= toDate(1585442721) AND TimeReceived >= toDateTime(1585442721) GROUP BY t ORDER BY t",
+          "query": "WITH\n    if(EType = 0x800, IPv4NumToString(reinterpretAsUInt32(substring(reverse(SrcAddr), 13, 4))), IPv6NumToString(SrcAddr)) as srcip,\n    IPv4CIDRToRange(IPv4StringToNum(splitByChar('/', $lanips)[1]), toUInt8(splitByChar('/', $lanips)[2])) as iprange\nSELECT\n    DstPort as port,\n    sum(Bytes) AS sumbytes\nFROM $table\nWHERE $timeFilter AND IPv4NumToString(reinterpretAsUInt32(substring(reverse(SamplerAddress), 13, 4))) = '$node' AND\n    ((IPv4StringToNum(srcip) >= (iprange.1)) AND (IPv4StringToNum(srcip) <= (iprange.2)))\nGROUP BY port\nORDER BY sumbytes DESC",
+          "rawQuery": "WITH     if(EType = 0x800, IPv4NumToString(reinterpretAsUInt32(substring(reverse(SrcAddr), 13, 4))), IPv6NumToString(SrcAddr)) as srcip,     IPv4CIDRToRange(IPv4StringToNum(splitByChar('/', '0.0.0.0/0')[1]), toUInt8(splitByChar('/', '0.0.0.0/0')[2])) as iprange SELECT     DstPort as port,     sum(Bytes) AS sumbytes FROM default.flows_raw WHERE TimeReceived >= toDateTime(1590336849) AND IPv4NumToString(reinterpretAsUInt32(substring(reverse(SamplerAddress), 13, 4))) = '192.168.25.1' AND     ((IPv4StringToNum(srcip) >= (iprange.1)) AND (IPv4StringToNum(srcip) <= (iprange.2))) GROUP BY port ORDER BY sumbytes DESC",
           "rawSql": "SELECT src_ip, count(*), sum(bytes) AS sumBytes FROM flows GROUP BY src_ip",
           "refId": "A",
           "round": "0s",
@@ -662,518 +831,25 @@
         }
       ],
       "title": "Порты назначения трафика",
-      "transform": "table",
-      "transparent": true,
-      "type": "table"
-    },
-    {
-      "columns": [],
-      "datasource": "Prometheus",
-      "fontSize": "80%",
-      "gridPos": {
-        "h": 7,
-        "w": 24,
-        "x": 0,
-        "y": 14
-      },
-      "id": 39,
-      "links": [],
-      "maxPerRow": 2,
-      "pageSize": 6,
-      "repeat": null,
-      "repeatDirection": "h",
-      "showHeader": true,
-      "sort": {
-        "col": 1,
-        "desc": false
-      },
-      "styles": [
+      "transformations": [
         {
-          "alias": "Time",
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "pattern": "Time",
-          "type": "hidden"
-        },
-        {
-          "alias": "Интерфейс",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "mappingType": 1,
-          "pattern": "ifDescr",
-          "preserveFormat": false,
-          "sanitize": false,
-          "thresholds": [],
-          "type": "string",
-          "unit": "short"
-        },
-        {
-          "alias": "",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "mappingType": 1,
-          "pattern": "ifIndex",
-          "thresholds": [],
-          "type": "hidden",
-          "unit": "short"
-        },
-        {
-          "alias": "",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "mappingType": 1,
-          "pattern": "__name__",
-          "thresholds": [],
-          "type": "hidden",
-          "unit": "short"
-        },
-        {
-          "alias": "",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "mappingType": 1,
-          "pattern": "instance",
-          "thresholds": [],
-          "type": "hidden",
-          "unit": "short"
-        },
-        {
-          "alias": "",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "mappingType": 1,
-          "pattern": "job",
-          "thresholds": [],
-          "type": "hidden",
-          "unit": "short"
-        },
-        {
-          "alias": "",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "mappingType": 1,
-          "pattern": "ifName",
-          "thresholds": [],
-          "type": "hidden",
-          "unit": "short"
-        },
-        {
-          "alias": "MTU",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 0,
-          "mappingType": 1,
-          "pattern": "Value #A",
-          "thresholds": [],
-          "type": "string",
-          "unit": "decbytes"
-        },
-        {
-          "alias": "Байт принято",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "mappingType": 1,
-          "pattern": "Value #B",
-          "thresholds": [],
-          "type": "number",
-          "unit": "decbytes"
-        },
-        {
-          "alias": "Байт отправленно",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "mappingType": 1,
-          "pattern": "Value #C",
-          "thresholds": [],
-          "type": "number",
-          "unit": "decbytes"
-        },
-        {
-          "alias": "Количество принятых пакетов",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "mappingType": 1,
-          "pattern": "Value #D",
-          "thresholds": [],
-          "type": "number",
-          "unit": "short"
-        },
-        {
-          "alias": "Количество отправленных пакетов",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "mappingType": 1,
-          "pattern": "Value #E",
-          "thresholds": [],
-          "type": "number",
-          "unit": "short"
-        },
-        {
-          "alias": "Подключение коннектора",
-          "colorMode": "cell",
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(50, 172, 45, 0.97)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "mappingType": 1,
-          "pattern": "Value #F",
-          "thresholds": [
-            "1"
-          ],
-          "type": "string",
-          "unit": "short"
-        },
-        {
-          "alias": "Состояние интерфейса",
-          "colorMode": "cell",
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(50, 172, 45, 0.97)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "mappingType": 1,
-          "pattern": "Value #H",
-          "thresholds": [
-            "1"
-          ],
-          "type": "string",
-          "unit": "short"
-        },
-        {
-          "alias": "Административное состояние",
-          "colorMode": "cell",
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(50, 172, 45, 0.97)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "mappingType": 1,
-          "pattern": "Value #G",
-          "thresholds": [
-            "1"
-          ],
-          "type": "string",
-          "unit": "short"
-        },
-        {
-          "alias": "Ошибок входящих пакетов",
-          "colorMode": "cell",
-          "colors": [
-            "rgba(50, 172, 45, 0.97)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(245, 54, 54, 0.9)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "mappingType": 1,
-          "pattern": "Value #I",
-          "thresholds": [
-            "1",
-            "100"
-          ],
-          "type": "number",
-          "unit": "short"
-        },
-        {
-          "alias": "Ошибок исходящих пакетов",
-          "colorMode": "cell",
-          "colors": [
-            "rgba(50, 172, 45, 0.97)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(245, 54, 54, 0.9)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "mappingType": 1,
-          "pattern": "Value #J",
-          "thresholds": [
-            "1",
-            "100"
-          ],
-          "type": "number",
-          "unit": "short"
-        },
-        {
-          "alias": "MAC",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "mappingType": 1,
-          "pattern": "ifPhysAddress",
-          "thresholds": [],
-          "type": "string",
-          "unit": "short"
-        },
-        {
-          "alias": "",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "mappingType": 1,
-          "pattern": "Value #K",
-          "thresholds": [],
-          "type": "hidden",
-          "unit": "short"
-        },
-        {
-          "alias": "Скорость интерфейса",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "mappingType": 1,
-          "pattern": "Value #L",
-          "thresholds": [],
-          "type": "number",
-          "unit": "bps"
-        },
-        {
-          "alias": "Тип интерфейса",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "mappingType": 1,
-          "pattern": "ifType",
-          "thresholds": [],
-          "type": "string",
-          "unit": "short"
-        },
-        {
-          "alias": "",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "mappingType": 1,
-          "pattern": "Value #M",
-          "thresholds": [],
-          "type": "hidden",
-          "unit": "short"
-        },
-        {
-          "alias": "",
-          "align": "auto",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "mappingType": 1,
-          "pattern": "ifAlias",
-          "thresholds": [],
-          "type": "hidden",
-          "unit": "short"
-        },
-        {
-          "alias": "",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "decimals": 2,
-          "pattern": "/.*/",
-          "thresholds": [],
-          "type": "number",
-          "unit": "short"
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "port": "Порт",
+              "sumbytes": "Объём трафика"
+            }
+          }
         }
       ],
-      "targets": [
-        {
-          "expr": "sum(ifPhysAddress{instance=~\"$node\",job=\"snmp\"})by(instance,job,ifDescr,ifPhysAddress)",
-          "format": "table",
-          "hide": false,
-          "instant": true,
-          "refId": "K"
-        },
-        {
-          "expr": "sum(ifSpeed{instance=~\"$node\",job=\"snmp\"})by(instance,job,ifDescr,ifSpeed)",
-          "format": "table",
-          "instant": true,
-          "refId": "L"
-        },
-        {
-          "expr": "sum(ifType_info{instance=~\"$node\",job=\"snmp\"})by(instance,job,ifDescr,ifType_info)",
-          "format": "table",
-          "instant": true,
-          "refId": "M"
-        },
-        {
-          "expr": "ifMtu{instance=~\"$node\",job=\"snmp\"}",
-          "format": "table",
-          "instant": true,
-          "intervalFactor": 1,
-          "refId": "A"
-        },
-        {
-          "expr": "sum(ifHCInOctets{instance=~\"$node\",job=\"snmp\"})by(instance,job,ifDescr,ifHCInOctets)",
-          "format": "table",
-          "instant": true,
-          "intervalFactor": 1,
-          "refId": "B"
-        },
-        {
-          "expr": "sum(ifHCInMulticastPkts{instance=~\"$node\",job=\"snmp\"} + ifInBroadcastPkts{instance=~\"$node\",job=\"snmp\"} + ifInUcastPkts{instance=~\"$node\",job=\"snmp\"})by(instance,job,ifDescr)",
-          "format": "table",
-          "instant": true,
-          "refId": "D"
-        },
-        {
-          "expr": "sum(ifInErrors{instance=~\"$node\",job=\"snmp\"})by(instance,job,ifDescr,ifInErrors)",
-          "format": "table",
-          "instant": true,
-          "legendFormat": "",
-          "refId": "I"
-        },
-        {
-          "expr": "sum(ifHCOutOctets{instance=~\"$node\",job=\"snmp\"})by(instance,job,ifDescr,ifHCOutOctets)",
-          "format": "table",
-          "instant": true,
-          "refId": "C"
-        },
-        {
-          "expr": "sum(ifHCOutMulticastPkts{instance=~\"$node\",job=\"snmp\"} + ifOutBroadcastPkts{instance=~\"$node\",job=\"snmp\"} + ifOutUcastPkts{instance=~\"$node\",job=\"snmp\"})by(instance,job,ifDescr)",
-          "format": "table",
-          "instant": true,
-          "refId": "E"
-        },
-        {
-          "expr": "sum(ifOutErrors{instance=~\"$node\",job=\"snmp\"})by(instance,job,ifDescr,ifOutErrors)",
-          "format": "table",
-          "instant": true,
-          "legendFormat": "",
-          "refId": "J"
-        },
-        {
-          "expr": "sum(ifOperStatus{instance=~\"$node\",job=\"snmp\"})by(instance,job,ifDescr,ifOperStatus) == bool 1",
-          "format": "table",
-          "instant": true,
-          "refId": "H"
-        },
-        {
-          "expr": "sum(ifConnectorPresent{instance=~\"$node\",job=\"snmp\"})by(instance,job,ifDescr,ifConnectorPresent) > bool 0",
-          "format": "table",
-          "hide": true,
-          "instant": true,
-          "refId": "F"
-        },
-        {
-          "expr": "sum(ifAdminStatus{instance=~\"$node\",job=\"snmp\"})by(instance,job,ifDescr,ifAdminStatus) == bool 1",
-          "format": "table",
-          "hide": true,
-          "instant": true,
-          "legendFormat": "",
-          "refId": "G"
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Информация об интерфейсах оборудования $node",
-      "transform": "table",
       "transparent": true,
       "type": "table"
     }
   ],
   "refresh": false,
-  "schemaVersion": 22,
+  "schemaVersion": 25,
   "style": "dark",
   "tags": [],
   "templating": {
@@ -1181,10 +857,12 @@
       {
         "allValue": null,
         "current": {
-          "selected": false,
+          "tags": [],
           "text": "192.168.25.1",
           "value": "192.168.25.1"
         },
+        "datasource": "ClickHouse",
+        "definition": "SELECT IPv4NumToString(reinterpretAsUInt32(substring(reverse(SamplerAddress), 13, 4))) AS router\nFROM default.flows_raw\nGROUP BY router",
         "hide": 0,
         "includeAll": false,
         "label": "IP адрес роутера",
@@ -1197,19 +875,64 @@
             "value": "192.168.25.1"
           }
         ],
-        "query": "192.168.25.1",
+        "query": "SELECT IPv4NumToString(reinterpretAsUInt32(substring(reverse(SamplerAddress), 13, 4))) AS router\nFROM default.flows_raw\nGROUP BY router",
+        "refresh": 0,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": "'0.0.0.0/0'",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "hide": 0,
+        "includeAll": true,
+        "label": "Фильтрация по подсетямм",
+        "multi": false,
+        "name": "lanips",
+        "options": [
+          {
+            "selected": true,
+            "text": "All",
+            "value": "$__all"
+          },
+          {
+            "selected": false,
+            "text": "192.168.25.0/24",
+            "value": "192.168.25.0/24"
+          },
+          {
+            "selected": false,
+            "text": "192.168.28.0/24",
+            "value": "192.168.28.0/24"
+          },
+          {
+            "selected": false,
+            "text": "192.168.31.0/24",
+            "value": "192.168.31.0/24"
+          }
+        ],
+        "query": "192.168.25.0/24, 192.168.28.0/24, 192.168.31.0/24",
+        "queryValue": "",
         "skipUrlSync": false,
         "type": "custom"
       }
     ]
   },
   "time": {
-    "from": "now-12h",
+    "from": "now-30m",
     "to": "now"
   },
   "timepicker": {
     "refresh_intervals": [
-      "5s",
       "10s",
       "30s",
       "1m",
@@ -1233,10 +956,7 @@
     ]
   },
   "timezone": "",
-  "title": "Traffic (ClickHouse)",
-  "uid": "tkNEAd9Zk",
-  "variables": {
-    "list": []
-  },
-  "version": 9
+  "title": "Информация о трафике",
+  "uid": "m0mHw9gMz",
+  "version": 35
 }

@@ -8,6 +8,11 @@ datasources:
    url: http://prometheus:9090
    version: 1
    editable: true
+ - name: VictoriaMetrics
+   type: prometheus
+   access: proxy
+   url: http://victoriametrics:8428
+   isDefault: true
  - name: ClickHouse
    type: vertamedia-clickhouse-datasource
    typeLogoUrl: ''
@@ -20,7 +25,6 @@ datasources:
    basicAuthUser: ''
    basicAuthPassword: ''
    withCredentials: false
-   isDefault: true
    jsonData: {}
    secureJsonFields: {}
    version: 3

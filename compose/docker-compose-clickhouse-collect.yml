@@ -33,6 +33,7 @@ services:
       -c "sleep 15 ;
       kafka-topics.sh --create --zookeeper zookeeper:2181 --replication-factor 1 --partitions 2 --topic flows ;"
   grafana:
+    container_name: grafana
     build: ../grafana
     networks: 
       - internal
@@ -45,14 +46,35 @@ services:
       - ./grafana/datasources-ch.yml:/etc/grafana/provisioning/datasources/datasources-ch.yml
       - ./grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml
       - ./grafana/dashboards:/var/lib/grafana/dashboards
+  victoriametrics:
+    container_name: victoriametrics
+    image: victoriametrics/victoria-metrics
+    ports:
+      - 8428:8428
+      - 2003:2003
+      - 4242:4242
+    volumes:
+      - vmdata:/storage
+    command:
+      - '--storageDataPath=/storage'
+      - '--graphiteListenAddr=:2003'
+      - '--opentsdbListenAddr=:4242'
+      - '--httpListenAddr=:8428'
+    networks:
+      - internal
+    restart: always
   prometheus:
+    container_name: prometheus
     image: 'prom/prometheus'
+    depends_on:
+      - "victoriametrics"
     networks: 
       - internal
     ports:
       - '9090:9090'
     restart: always
     volumes:
+      - promdata:/prometheus
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
   goflow:
     image: 'cloudflare/goflow:latest'
@@ -100,8 +122,8 @@ services:
     depends_on:
       - 'kafka'
     restart: always
-  snmp_prometheus:
-    container_name: snmp_prometheus
+  snmp:
+    container_name: snmp
     image: prom/snmp-exporter
     networks: 
       - internal
@@ -110,34 +132,38 @@ services:
     volumes:
       - ./snmp.yml:/etc/snmp_exporter/snmp.yml
     restart: always
-  loki:
-    image: grafana/loki:master
-    networks: 
-      - internal
-    ports:
-      - '3100:3100'
-    volumes:
-      - ./loki/loki.yaml:/etc/loki/loki.yaml
-    command: -config.file=/etc/loki/loki.yaml
-  promtail:
-    image: grafana/promtail:master
-    volumes:
-      - /var/log:/var/log
-      - ./loki/promtail/promtail.yaml:/etc/promtail/promtail.yaml
-    networks: 
-      - internal
-    ports:
-      - '1514:1514'
-    command: -config.file=/etc/promtail/promtail.yaml
-  syslog:
-    image: balabit/syslog-ng
-    volumes: 
-      - ./loki/syslog-ng/syslog-ng.conf:/etc/syslog-ng/syslog-ng.conf
-    ports: 
-      - '514:514/udp'
-      - '601:601'
-    networks: 
-      - internal
+#  loki:
+#    image: grafana/loki:master
+#    networks: 
+#      - internal
+#    ports:
+#      - '3100:3100'
+#    volumes:
+#      - ./loki/loki.yaml:/etc/loki/loki.yaml
+#    command: -config.file=/etc/loki/loki.yaml
+#  promtail:
+#    image: grafana/promtail:master
+#    volumes:
+#      - /var/log:/var/log
+#      - ./loki/promtail/promtail.yaml:/etc/promtail/promtail.yaml
+#    networks: 
+#      - internal
+#    ports:
+#      - '1514:1514'
+#    command: -config.file=/etc/promtail/promtail.yaml
+#  syslog:
+#    image: balabit/syslog-ng
+#    volumes: 
+#      - ./loki/syslog-ng/syslog-ng.conf:/etc/syslog-ng/syslog-ng.conf
+#    ports: 
+#      - '514:514/udp'
+#      - '601:601'
+#    networks: 
+#      - internal
+
+volumes:
+  promdata: {}
+  vmdata: {}
 
 networks:
   internal:
