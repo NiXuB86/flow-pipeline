@@ -1,4 +1,6 @@
 # flow-pipeline
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FNiXuB86%2Fflow-pipeline.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FNiXuB86%2Fflow-pipeline?ref=badge_shield)
+
 
 This repository contains a set of tools and examples for [GoFlow](https://github.com/cloudflare/goflow),
 a NetFlow/IPFIX/sFlow collector by [Cloudflare](https://www.cloudflare.com).
@@ -245,3 +247,7 @@ $ docker-compose -f some-yaml-listed-above.yml pull
 $ docker-compose -f some-yaml-listed-above.yml build
 $ docker-compose -f some-yaml-listed-above.yml up
 ```
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FNiXuB86%2Fflow-pipeline.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FNiXuB86%2Fflow-pipeline?ref=badge_large)
